@@ -11,102 +11,50 @@ let centerY = height / 2;
 let tickNum = 0;
 const maxSteps = 15;
 let spiralColors;
+const my_length = 150;
 
 function init() {
-    var canvas = document.getElementById('canvas');
 
-    var hexHeight,
-        hexRadius,
-        hexRectangleHeight,
-        hexRectangleWidth,
-        hexagonAngle = 0.523598776, // 30 degrees in radians
-        sideLength = 100,
-        boardWidth = 100,
-        boardHeight = 100;
 
-    hexHeight = Math.sin(hexagonAngle) * sideLength;
-    hexRadius = Math.cos(hexagonAngle) * sideLength;
-    hexRectangleHeight = sideLength + 2 * hexHeight;
-    hexRectangleWidth = 2 * hexRadius;
+    const hex = new Hexagon(centerX, centerY, 'blue', my_length)
+    hex.draw();
+    let hexPost = getHexPosition(centerX, centerY, 1, my_length);
+    const newhex = new Hexagon(hexPost.x, hexPost.y, 'green', my_length)
+    hex.makeNeighbor(newhex, 1);
+    newhex.draw()
+}
 
-    if (canvas.getContext) {
-        var ctx = canvas.getContext('2d');
+function rotateAround(x, y, angle) {
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.translate(-x, -y);
+}
 
-        ctx.fillStyle = "#000000";
-        ctx.strokeStyle = "#CCCCCC";
-        ctx.lineWidth = 1;
-
-        drawBoard(ctx, boardWidth, boardHeight);
-
-        canvas.addEventListener("mousemove", function (eventInfo) {
-            var x,
-                y,
-                hexX,
-                hexY,
-                screenX,
-                screenY,
-                rect;
-
-            rect = canvas.getBoundingClientRect();
-
-            x = eventInfo.clientX - rect.left;
-            y = eventInfo.clientY - rect.top;
-
-            hexY = Math.floor(y / (hexHeight + sideLength));
-            hexX = Math.floor((x - (hexY % 2) * hexRadius) / hexRectangleWidth);
-
-            screenX = hexX * hexRectangleWidth + ((hexY % 2) * hexRadius);
-            screenY = hexY * (hexHeight + sideLength);
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            drawBoard(ctx, boardWidth, boardHeight);
-
-            // Check if the mouse's coords are on the board
-            if (hexX >= 0 && hexX < boardWidth) {
-                if (hexY >= 0 && hexY < boardHeight) {
-                    ctx.fillStyle = "#000000";
-                    drawHexagon(ctx, screenX, screenY, true);
-                }
-            }
-        });
+function colorToString(color) {
+    if (color instanceof CanvasGradient) {
+        return color;
     }
+    return "rgb(" + color.join(', ') + ")";
+}
 
-    function drawBoard(canvasContext, width, height) {
-        var i,
-            j;
+function complementaryColor(color) {
+    return [255 - color[0], 255 - color[1], 255 - color[2]];
+}
 
-        for (i = 0; i < width; ++i) {
-            for (j = 0; j < height; ++j) {
-                drawHexagon(
-                    ctx,
-                    i * hexRectangleWidth + ((j % 2) * hexRadius),
-                    j * (sideLength + hexHeight),
-                    false
-                );
-            }
-        }
-    }
+function randomColor() {
+    return Array(3).fill(null).map(() => Math.floor(Math.random() * 255));
+}
 
-    function drawHexagon(canvasContext, x, y, fill) {
-        var fill = fill || false;
-
-        canvasContext.beginPath();
-        canvasContext.arc(x + hexRadius, y, 5, 0, Math.PI*2);
-        ctx.fillStyle = "#0095DD";
-        canvasContext.moveTo(x + hexRadius, y);
-        canvasContext.lineTo(x + hexRectangleWidth, y + hexHeight);
-        canvasContext.lineTo(x + hexRectangleWidth, y + hexHeight + sideLength);
-        canvasContext.lineTo(x + hexRadius, y + hexRectangleHeight);
-        canvasContext.lineTo(x, y + sideLength + hexHeight);
-        canvasContext.lineTo(x, y + hexHeight);
-        canvasContext.closePath();
-
-
-        if (fill) {
-            canvasContext.fill();
-        } else {
-            canvasContext.stroke();
-        }
-    }
+function getHexPosition(x, y, position, length) {
+    position = (position + 4) % 6;
+    const innerRadius = Math.sqrt(3) / 2 * length;
+    const phi = Math.PI * (2 / 6) * position;
+    return {
+      x: x + Math.cos(phi) * 2 * innerRadius,
+      y: y + Math.sin(phi) * 2 * innerRadius
+    };
+    // return {
+    //   x: x + 2 * innerRadius,
+    //   y: y
+    // };
 }
